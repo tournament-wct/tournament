@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚽ Stake World Chat Tournament</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root{--bg:#0f1923;--bg2:#162330;--bg3:#1a2d3d;--border:#1e3448;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;--green:#4ade80;--red:#f87171;--amber:#fbbf24;--blue:#60a5fa;--purple:#a78bfa;--orange:#f59e0b;}
+[data-theme="light"]{--bg:#f8fafc;--bg2:#fff;--bg3:#f1f5f9;--border:#e2e8f0;--text:#0f172a;--text2:#475569;--text3:#94a3b8;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:60px;transition:background .3s,color .3s;}
+.header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;}
+.header-left{display:flex;align-items:center;gap:10px;}
+.header-title{font-size:14px;font-weight:700;}
+.header-days{font-size:11px;color:var(--amber);background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);padding:3px 8px;border-radius:5px;}
+.header-right{display:flex;align-items:center;gap:6px;}
+.badge-live{background:rgba(74,222,128,.1);color:var(--green);font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;border:1px solid rgba(74,222,128,.3);display:flex;align-items:center;gap:5px;}
+.badge-live::before{content:'';width:6px;height:6px;background:var(--green);border-radius:50%;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.btn{border:none;padding:6px 12px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;transition:opacity .2s;}
+.btn:hover{opacity:.8;}
+.btn-green{background:#1a9e6e;color:#fff;}
+.btn-icon{background:var(--bg3);color:var(--text2);border:1px solid var(--border);padding:6px 10px;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.countdown-banner{background:linear-gradient(90deg,rgba(133,79,11,.15),var(--bg));border-bottom:1px solid rgba(133,79,11,.3);padding:7px 1.5rem;display:flex;align-items:center;gap:12px;}
+.countdown-label{font-size:11px;color:var(--amber);font-weight:600;text-transform:uppercase;letter-spacing:1px;}
+.countdown-timer{display:flex;gap:6px;align-items:center;}
+.cd-unit{text-align:center;}
+.cd-val{font-size:16px;font-weight:800;color:var(--text);}
+.cd-label{font-size:9px;color:var(--amber);text-transform:uppercase;}
+.cd-sep{font-size:16px;color:var(--amber);}
+.stats-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border-bottom:1px solid var(--border);}
+.stat-box{background:var(--bg2);padding:10px 16px;text-align:center;}
+.stat-value{font-size:20px;font-weight:700;}
+.stat-label{font-size:10px;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:.5px;}
+.toolbar{display:flex;align-items:center;gap:8px;padding:8px 1.5rem;background:var(--bg2);border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.search-input,.filter-select{background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:6px 12px;font-size:12px;color:var(--text);outline:none;}
+.search-input{width:200px;}
+.search-input:focus,.filter-select:focus{border-color:var(--blue);}
+.toolbar-right{margin-left:auto;font-size:11px;color:var(--text3);}
+.btn-suspense{background:linear-gradient(90deg,#7c3aed,#4f46e5);color:#fff;}
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg2);overflow-x:auto;padding:0 1.5rem;}
+.tab{padding:9px 14px;font-size:12px;font-weight:600;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s;}
+.tab:hover{color:var(--text2);}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+.content{padding:1.25rem 1.5rem;max-width:100%;margin:0;}
+.section-title{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin:1.25rem 0 .75rem;display:flex;align-items:center;gap:8px;}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.layout-2col{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start;}
+.layout-3col{display:grid;grid-template-columns:320px 1fr 300px;gap:16px;align-items:start;}
+@media(max-width:1100px){.layout-3col{grid-template-columns:1fr 280px;}.layout-3col .col-left{display:none;}}
+@media(max-width:768px){.layout-3col{grid-template-columns:1fr;}.layout-3col .col-right{display:none;}}
+.country-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;}
+.country-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:all .2s;position:relative;}
+.country-card:hover{border-color:var(--blue);transform:translateY(-1px);}
+.country-card.rank-1{border-color:#b8860b;}
+.country-card.rank-2{border-color:#4a5568;}
+.country-card.rank-3{border-color:#7b4a1a;}
+.country-card.overtaken{animation:overtake 1s ease;}
+@keyframes overtake{0%{transform:scale(1)}50%{transform:scale(1.05);border-color:var(--green);}100%{transform:scale(1);}}
+.country-rank{font-size:18px;margin-bottom:4px;}
+.country-name{font-size:13px;font-weight:700;margin-bottom:6px;}
+.country-won{font-size:22px;font-weight:800;color:var(--green);}
+.country-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+.country-winrate{position:absolute;top:10px;right:10px;font-size:11px;font-weight:700;color:var(--amber);}
+.country-link{font-size:10px;color:var(--text3);text-decoration:none;display:block;margin-top:6px;}
+.country-link:hover{color:var(--blue);}
+.podium{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:1rem;}
+.podium-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:1rem;text-align:center;cursor:pointer;transition:transform .2s;}
+.podium-card:hover{transform:translateY(-2px);}
+.podium-card.rank-1{border-color:#b8860b;}
+.podium-card.rank-2{border-color:#4a5568;}
+.podium-card.rank-3{border-color:#7b4a1a;}
+.podium-avatar{width:44px;height:44px;border-radius:50%;margin:0 auto 6px;background:var(--bg3);overflow:hidden;border:2px solid var(--border);}
+.podium-avatar img{width:100%;height:100%;object-fit:cover;}
+.podium-medal{font-size:22px;margin-bottom:4px;}
+.podium-name{font-size:13px;font-weight:700;margin-bottom:4px;}
+.podium-score{font-size:26px;font-weight:800;color:var(--green);}
+.podium-winrate{font-size:12px;color:var(--amber);margin-top:2px;}
+.podium-sub{font-size:10px;color:var(--text3);margin-top:4px;}
+.podium-badges{display:flex;justify-content:center;gap:4px;margin-top:6px;flex-wrap:wrap;}
+table{width:100%;border-collapse:collapse;}
+th{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;padding:7px 10px;text-align:left;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap;}
+th:hover{color:var(--text2);}
+th.right{text-align:right;}
+td{padding:8px 10px;border-bottom:1px solid var(--bg);font-size:12px;background:var(--bg2);transition:background .1s;}
+tr:hover td{background:var(--bg3);}
+tr.today td{background:rgba(74,222,128,.04);border-left:2px solid var(--green);}
+tr.clickable{cursor:pointer;}
+.rank-cell{font-weight:700;color:var(--text3);width:36px;}
+.username-cell{display:flex;align-items:center;gap:8px;}
+.user-avatar{width:24px;height:24px;border-radius:50%;background:var(--bg3);overflow:hidden;flex-shrink:0;}
+.user-avatar img{width:100%;height:100%;object-fit:cover;}
+.user-name{font-weight:600;}
+.user-badges{display:flex;gap:2px;}
+.won-cell{text-align:right;font-weight:700;color:var(--green);}
+.lost-cell{text-align:right;color:var(--red);}
+.cashout-cell{text-align:right;color:var(--orange);}
+.adjusted-cell{text-align:right;color:var(--purple);}
+.void-cell{text-align:right;color:var(--text2);}
+.unk-cell{text-align:right;color:var(--text3);}
+.total-cell{text-align:right;color:var(--text2);}
+.winrate-cell{text-align:right;color:var(--amber);font-weight:600;}
+.progress-bar{height:3px;background:var(--border);border-radius:2px;margin-top:3px;}
+.progress-fill{height:100%;background:#1a9e6e;border-radius:2px;}
+.today-badge{background:rgba(74,222,128,.15);color:var(--green);font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;border:1px solid rgba(74,222,128,.3);}
+.badge-trophy{font-size:13px;cursor:help;}
+.bet-panel{display:none;}
+.bet-panel.open{display:table-row;}
+.bet-panel-inner{padding:12px 16px;background:rgba(0,0,0,.2);}
+.bet-group{margin-bottom:8px;}
+.bet-group-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.bet-chips{display:flex;flex-wrap:wrap;gap:4px;}
+.bet-chip{font-size:10px;font-family:monospace;padding:3px 7px;border-radius:4px;text-decoration:none;border:1px solid transparent;transition:opacity .2s;}
+.bet-chip:hover{opacity:.7;}
+.bet-chip.won{background:#052e16;color:var(--green);border-color:#166534;}
+.bet-chip.lost{background:#2d0a0a;color:var(--red);border-color:#7f1d1d;}
+.bet-chip.cashout{background:#1c1a05;color:var(--orange);border-color:#854f0b;}
+.bet-chip.adjusted{background:#1a0a2e;color:var(--purple);border-color:#5b21b6;}
+.bet-chip.void{background:rgba(0,0,0,.2);color:var(--text2);border-color:var(--border);}
+.bet-chip.unknown,.bet-chip.pending{background:var(--bg3);color:var(--text3);border-color:var(--border);}
+.timeline{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px;}
+.timeline-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.timeline-title{font-size:12px;font-weight:700;flex:1;}
+.tl-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite;}
+.timeline-body{max-height:300px;overflow-y:auto;}
+.tl-item{display:flex;align-items:center;gap:6px;padding:7px 12px;border-bottom:1px solid var(--border);animation:slideIn .3s ease;}
+@keyframes slideIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.tl-flag{font-size:13px;}
+.tl-author{font-size:12px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tl-bet{font-size:10px;font-family:monospace;color:var(--text3);}
+.tl-status{font-size:11px;}
+.tl-odds{font-size:10px;color:var(--amber);}
+.tl-time{font-size:10px;color:var(--text3);white-space:nowrap;}
+.tl-empty{padding:20px;text-align:center;color:var(--text3);font-size:12px;}
+.chat-box{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;}
+.chat-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.chat-title{font-size:12px;font-weight:700;flex:1;}
+.chat-online{font-size:10px;color:var(--green);}
+.chat-messages{max-height:280px;overflow-y:auto;padding:8px 12px;display:flex;flex-direction:column;gap:6px;}
+.chat-msg{display:flex;gap:8px;align-items:flex-start;}
+.chat-msg-av{width:24px;height:24px;border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--text2);flex-shrink:0;}
+.chat-msg-content{flex:1;}
+.chat-msg-header{display:flex;align-items:center;gap:6px;margin-bottom:2px;}
+.chat-msg-name{font-size:11px;font-weight:700;color:var(--blue);}
+.chat-msg-name.own{color:var(--green);}
+.chat-msg-time{font-size:10px;color:var(--text3);}
+.chat-msg-text{font-size:12px;color:var(--text);word-break:break-word;}
+.chat-reactions{display:flex;gap:3px;margin-top:3px;flex-wrap:wrap;}
+.chat-reaction{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:1px 6px;font-size:10px;cursor:pointer;}
+.chat-reaction:hover,.chat-reaction.active{background:rgba(96,165,250,.15);border-color:var(--blue);}
+.chat-input-area{padding:8px 12px;border-top:1px solid var(--border);display:flex;gap:8px;}
+.chat-input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:6px 10px;font-size:12px;color:var(--text);outline:none;}
+.chat-input:focus{border-color:var(--blue);}
+.chat-send{background:#1a9e6e;color:#fff;border:none;border-radius:7px;padding:6px 12px;font-size:12px;cursor:pointer;}
+.chat-pseudo-prompt{padding:12px;text-align:center;}
+.chat-pseudo-input{background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:6px 10px;font-size:12px;color:var(--text);outline:none;width:150px;margin-right:6px;}
+.chat-pseudo-btn{background:var(--blue);color:#fff;border:none;border-radius:7px;padding:6px 12px;font-size:12px;cursor:pointer;}
+.pending-widget{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-top:1rem;}
+.pending-widget-header{padding:10px 16px;background:var(--bg3);display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);}
+.pending-widget-title{font-size:12px;font-weight:700;color:var(--text2);flex:1;}
+.pending-widget-count{background:var(--border);color:var(--text3);font-size:11px;padding:2px 8px;border-radius:20px;}
+.pending-widget-body{padding:8px 12px;display:flex;flex-direction:column;gap:4px;max-height:220px;overflow-y:auto;}
+.pending-row{display:flex;align-items:center;gap:8px;padding:5px 8px;background:var(--bg);border-radius:6px;}
+.pending-flag{font-size:13px;}
+.pending-author{font-size:11px;color:var(--text2);width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pending-chips-wrap{display:flex;flex-wrap:wrap;gap:3px;flex:1;}
+.pending-chip{font-size:10px;font-family:monospace;padding:2px 5px;border-radius:3px;background:var(--bg3);color:var(--text3);text-decoration:none;}
+.pending-chip:hover{color:var(--text2);}
+.widget-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem;}
+.widget{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px;}
+.widget-icon{font-size:24px;}
+.widget-info{flex:1;}
+.widget-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
+.widget-value{font-size:15px;font-weight:800;color:var(--text);}
+.widget-sub{font-size:11px;color:var(--text3);margin-top:1px;}
+.widget-big{font-size:20px;font-weight:800;}
+.botd{background:linear-gradient(135deg,rgba(251,191,36,.08),var(--bg2));border:1px solid rgba(251,191,36,.3);border-radius:10px;padding:14px;margin-bottom:1rem;}
+.botd-label{font-size:10px;color:var(--amber);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:6px;}
+.botd-main{display:flex;align-items:center;gap:12px;}
+.botd-author{font-size:15px;font-weight:800;}
+.botd-odds{font-size:26px;font-weight:900;color:var(--amber);}
+.botd-sub{font-size:11px;color:var(--text3);}
+.risky-row{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg2);border-radius:6px;margin-bottom:4px;border:1px solid var(--border);}
+.risky-rank{font-size:12px;color:var(--text3);width:20px;font-weight:700;}
+.risky-author{font-size:12px;color:var(--text);flex:1;font-weight:600;}
+.risky-bet{font-size:10px;font-family:monospace;color:var(--text3);text-decoration:none;}
+.risky-bet:hover{color:var(--blue);}
+.risky-status{font-size:11px;}
+.risky-odds{font-size:14px;font-weight:800;color:var(--amber);}
+.profile-header{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:1rem;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.profile-avatar-big{width:72px;height:72px;border-radius:50%;background:var(--bg3);overflow:hidden;border:3px solid var(--border);flex-shrink:0;}
+.profile-avatar-big img{width:100%;height:100%;object-fit:cover;}
+.profile-info{flex:1;}
+.profile-name{font-size:22px;font-weight:900;}
+.profile-country{font-size:13px;color:var(--text3);margin-top:2px;}
+.profile-badges-big{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+.profile-badge{font-size:20px;}
+.profile-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1rem;}
+.profile-stat{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;}
+.profile-stat-val{font-size:22px;font-weight:800;}
+.profile-stat-label{font-size:10px;color:var(--text3);text-transform:uppercase;margin-top:2px;}
+.profile-streak{background:linear-gradient(135deg,rgba(251,191,36,.08),var(--bg2));border:1px solid rgba(251,191,36,.3);border-radius:10px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:1rem;}
+.streak-fire{font-size:32px;}
+.streak-val{font-size:28px;font-weight:900;color:var(--amber);}
+.streak-label{font-size:11px;color:var(--text3);}
+.share-profile-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text2);border-radius:7px;padding:6px 12px;font-size:12px;cursor:pointer;}
+.share-profile-btn:hover{color:var(--blue);border-color:var(--blue);}
+.chart-container{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:1rem;}
+.chart-title{font-size:12px;font-weight:700;margin-bottom:10px;color:var(--text2);}
+.about-section{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:1rem;}
+.about-section h3{font-size:14px;font-weight:700;margin-bottom:10px;color:var(--blue);}
+.about-section p,.about-section li{font-size:13px;color:var(--text2);line-height:1.7;}
+.about-section ul{padding-left:20px;}
+.about-rule{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
+.about-rule:last-child{border-bottom:none;}
+.about-rule-num{font-size:16px;font-weight:900;color:var(--blue);min-width:28px;}
+.recap-card{background:linear-gradient(135deg,#0f1923,#162330);border:1px solid var(--border);border-radius:12px;padding:20px;}
+.recap-title{font-size:16px;font-weight:800;color:var(--amber);margin-bottom:12px;text-align:center;}
+.recap-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:13px;}
+.recap-label{color:var(--text3);}
+.recap-value{font-weight:700;color:var(--text);}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center;padding:1rem;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:var(--bg2);border:1px solid var(--border);border-radius:12px;width:100%;max-width:700px;max-height:90vh;overflow-y:auto;}
+.modal-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;position:sticky;top:0;background:var(--bg2);z-index:1;}
+.modal-title{font-size:15px;font-weight:700;flex:1;}
+.modal-close{background:var(--bg3);border:none;color:var(--text2);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px;}
+.modal-body{padding:16px 20px;}
+.suspense-overlay{display:none;position:fixed;inset:0;background:#000;z-index:300;flex-direction:column;align-items:center;justify-content:center;}
+.suspense-overlay.open{display:flex;}
+.suspense-label{font-size:13px;color:var(--amber);text-transform:uppercase;letter-spacing:3px;margin-bottom:2rem;}
+.suspense-rank{font-size:60px;font-weight:900;color:#fff;animation:reveal .5s ease;}
+@keyframes reveal{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
+.suspense-name{font-size:26px;color:var(--green);margin-top:.5rem;}
+.suspense-score{font-size:17px;color:var(--amber);margin-top:.25rem;}
+.suspense-btn{margin-top:2rem;background:#1a9e6e;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;}
+.suspense-skip{margin-top:1rem;color:#555;font-size:12px;cursor:pointer;}
+.confetti-piece{position:fixed;top:-10px;width:8px;height:8px;border-radius:50%;animation:fall linear forwards;pointer-events:none;z-index:999;}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:0;}}
+.empty{text-align:center;padding:3rem 2rem;color:var(--text3);}
+.empty-icon{font-size:40px;margin-bottom:1rem;}
+.error-banner{background:#2d0a0a;border:1px solid #7f1d1d;color:var(--red);border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:1rem;}
+.loader{display:flex;align-items:center;justify-content:center;padding:3rem;gap:10px;color:var(--text3);}
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:#1a9e6e;border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.status-bar{background:var(--bg);border-top:1px solid var(--border);padding:5px 1.5rem;font-size:11px;color:var(--text3);position:fixed;bottom:0;left:0;right:0;display:flex;gap:8px;}
+.follow-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text3);border-radius:5px;padding:3px 8px;font-size:10px;cursor:pointer;}
+.follow-btn.following{background:rgba(74,222,128,.1);border-color:var(--green);color:var(--green);}
+
+/* Chat panneau latéral style Stake */
+.chat-float-btn{position:fixed;bottom:20px;right:20px;width:48px;height:48px;border-radius:50%;background:#162330;border:1px solid var(--border);color:var(--text2);font-size:20px;cursor:pointer;z-index:150;box-shadow:0 4px 16px rgba(0,0,0,.4);transition:all .2s;display:flex;align-items:center;justify-content:center;}
+.chat-float-btn:hover{background:var(--bg3);color:var(--text);}
+.chat-float-btn.active{background:#1a9e6e;color:#fff;border-color:#1a9e6e;}
+.chat-notif{position:absolute;top:-3px;right:-3px;background:#ef4444;color:#fff;font-size:9px;font-weight:700;min-width:16px;height:16px;border-radius:8px;padding:0 3px;display:none;align-items:center;justify-content:center;}
+.chat-panel{position:fixed;top:0;right:0;width:320px;height:100vh;background:var(--bg2);border-left:1px solid var(--border);z-index:148;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .25s ease;box-shadow:-4px 0 24px rgba(0,0,0,.3);}
+.chat-panel.open{transform:translateX(0);}
+.chat-panel-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;background:var(--bg3);flex-shrink:0;}
+.chat-panel-icon{font-size:18px;}
+.chat-panel-title{font-size:13px;font-weight:700;flex:1;}
+.chat-panel-online{font-size:10px;color:var(--green);}
+.chat-panel-close{background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;padding:0;line-height:1;}
+.chat-panel-close:hover{color:var(--text);}
+.chat-panel-messages{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px;}
+.chat-panel-input{padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;}
+.chat-panel-input input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--text);outline:none;}
+.chat-panel-input input:focus{border-color:var(--blue);}
+.chat-panel-send{background:#1a9e6e;color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:14px;cursor:pointer;flex-shrink:0;}
+.chat-pseudo-wrap{padding:20px 16px;display:flex;flex-direction:column;align-items:center;gap:12px;flex:1;justify-content:center;}
+.chat-pseudo-wrap p{font-size:12px;color:var(--text3);text-align:center;line-height:1.6;}
+.chat-pseudo-wrap input{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--text);outline:none;width:100%;}
+.chat-pseudo-wrap input:focus{border-color:var(--blue);}
+.chat-pseudo-wrap button{background:#1a9e6e;color:#fff;border:none;border-radius:8px;padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;width:100%;}
+/* Décaler le contenu quand le chat est ouvert */
+body.chat-open .status-bar{right:320px;}
+.live-bar{background:linear-gradient(90deg,rgba(96,165,250,.06),var(--bg));border-bottom:1px solid rgba(96,165,250,.2);padding:5px 1.5rem;display:none;align-items:center;gap:8px;font-size:11px;}
+.live-bar.active{display:flex;}
+
+/* Widget matches CdM */
+.matches-widget{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px;}
+.matches-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.matches-title{font-size:12px;font-weight:700;flex:1;}
+.matches-refresh{font-size:10px;color:var(--text3);cursor:pointer;}
+.matches-refresh:hover{color:var(--blue);}
+.matches-tabs{display:flex;border-bottom:1px solid var(--border);}
+.matches-tab{flex:1;padding:6px;font-size:10px;font-weight:600;text-align:center;cursor:pointer;color:var(--text3);border-bottom:2px solid transparent;}
+.matches-tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+.matches-body{max-height:400px;overflow-y:auto;}
+.match-row{display:flex;align-items:center;gap:6px;padding:8px 12px;border-bottom:1px solid var(--border);font-size:12px;}
+.match-row:last-child{border-bottom:none;}
+.match-teams{flex:1;display:flex;flex-direction:column;gap:2px;}
+.match-team{display:flex;align-items:center;justify-content:space-between;}
+.match-team-name{font-size:11px;color:var(--text);font-weight:500;}
+.match-team-score{font-size:13px;font-weight:800;color:var(--text);min-width:16px;text-align:center;}
+.match-team-score.winner{color:var(--green);}
+.match-status{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;white-space:nowrap;min-width:40px;text-align:center;}
+.match-status.live{background:rgba(239,68,68,.15);color:#ef4444;animation:pulse 1s infinite;}
+.match-status.final{background:var(--bg3);color:var(--text3);}
+.match-status.scheduled{background:rgba(96,165,250,.1);color:var(--blue);}
+.match-prob{display:flex;gap:2px;margin-top:4px;}
+.match-prob-bar{height:3px;border-radius:2px;}
+.match-empty{padding:16px;text-align:center;color:var(--text3);font-size:11px;}
+.live-bar-dot{width:7px;height:7px;border-radius:50%;background:var(--blue);animation:pulse 1s infinite;}
+@media(max-width:768px){.layout-2col{grid-template-columns:1fr;}.podium{grid-template-columns:1fr;}.stats-bar{grid-template-columns:1fr 1fr;}.country-grid{grid-template-columns:1fr 1fr;}.widget-grid{grid-template-columns:1fr;}.profile-stats{grid-template-columns:1fr 1fr;}.cashout-cell,.adjusted-cell,.void-cell{display:none;}}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-left">
+    <span style="font-size:20px">⚽</span>
+    <div class="header-title">Stake World Chat Tournament 2026</div>
+    <span class="header-days" id="header-days"></span>
+  </div>
+  <div class="header-right">
+    <span class="badge-live" id="live-badge" style="display:none">LIVE</span>
+    <button class="btn btn-icon" onclick="toggleTheme()">🌙</button>
+    <button class="btn btn-icon" onclick="openShare()">📤</button>
+    <button class="btn btn-icon" onclick="generateRecap()">📄</button>
+    <button class="btn btn-green" id="btn-refresh" onclick="loadData()">↻ Actualiser</button>
+  </div>
+</div>
+<div class="countdown-banner">
+  <span class="countdown-label">⏰ Fin du tournoi</span>
+  <div class="countdown-timer">
+    <div class="cd-unit"><div class="cd-val" id="cd-days">--</div><div class="cd-label">jours</div></div>
+    <span class="cd-sep">:</span>
+    <div class="cd-unit"><div class="cd-val" id="cd-hours">--</div><div class="cd-label">h</div></div>
+    <span class="cd-sep">:</span>
+    <div class="cd-unit"><div class="cd-val" id="cd-mins">--</div><div class="cd-label">min</div></div>
+    <span class="cd-sep">:</span>
+    <div class="cd-unit"><div class="cd-val" id="cd-secs">--</div><div class="cd-label">sec</div></div>
+  </div>
+</div>
+<div class="live-bar" id="live-bar">
+  <div class="live-bar-dot"></div>
+  <span style="color:var(--text2)">Scraping en cours —</span>
+  <span style="color:var(--blue);font-weight:700" id="live-bar-val">0 bets</span>
+  <span style="color:var(--text3)">vérifiés</span>
+</div>
+<div class="stats-bar">
+  <div class="stat-box"><div class="stat-value" style="color:var(--blue)" id="stat-chats">—</div><div class="stat-label">Chats</div></div>
+  <div class="stat-box"><div class="stat-value" style="color:var(--green)" id="stat-won">—</div><div class="stat-label">Gagnants</div></div>
+  <div class="stat-box"><div class="stat-value" style="color:var(--amber)" id="stat-total">—</div><div class="stat-label">Total bets</div></div>
+  <div class="stat-box"><div class="stat-value" id="stat-users">—</div><div class="stat-label">Joueurs</div></div>
+  <div class="stat-box"><div class="stat-value" style="color:var(--purple)" id="stat-winrate">—</div><div class="stat-label">Win rate</div></div>
+</div>
+<div class="toolbar">
+  <input class="search-input" id="search-input" placeholder="🔍 Rechercher..." oninput="filterTable()">
+  <select class="filter-select" id="country-filter" onchange="filterTable()"><option value="">Tous les pays</option></select>
+  <button class="btn btn-suspense" onclick="startSuspense()">🎭 Suspense</button>
+  <span class="toolbar-right" id="toolbar-count"></span>
+</div>
+<div class="tabs" id="tabs">
+  <div class="tab active" onclick="showTab('global')" id="tab-global">🌍 Global</div>
+  <div class="tab" onclick="showTab('about')" id="tab-about">ℹ️ À propos</div>
+</div>
+<div class="content" id="main-content">
+  <div class="empty"><div class="empty-icon">⚽</div><p>Clique sur "Actualiser"</p></div>
+</div>
+<div class="status-bar"><span id="status-text">En attente...</span><span>·</span><span id="proxy-status">Proxy: ?</span></div>
+
+<!-- Player modal -->
+<div class="modal-overlay" id="player-overlay" onclick="closePlayer()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title" id="player-modal-title">Joueur</div>
+      <button id="follow-btn-modal" class="follow-btn" onclick="toggleFollow()">+ Suivre</button>
+      <button class="modal-close" onclick="closePlayer()">✕</button>
+    </div>
+    <div class="modal-body" id="player-modal-body"></div>
+  </div>
+</div>
+
+<!-- Share modal -->
+<div class="modal-overlay" id="share-overlay" onclick="closeShare()">
+  <div class="modal-box" onclick="event.stopPropagation()" style="max-width:400px">
+    <div class="modal-header"><div class="modal-title">📤 Partager</div><button class="modal-close" onclick="closeShare()">✕</button></div>
+    <div class="modal-body">
+      <div id="share-card-content" style="margin-bottom:12px"></div>
+      <div style="display:flex;gap:8px"><button class="btn btn-green" style="flex:1" onclick="copyShareText()">📋 Copier</button><button class="btn btn-icon" onclick="closeShare()">Fermer</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Recap modal -->
+<div class="modal-overlay" id="recap-overlay" onclick="closeRecap()">
+  <div class="modal-box" onclick="event.stopPropagation()" style="max-width:520px">
+    <div class="modal-header"><div class="modal-title">📄 Récap du jour</div><button class="modal-close" onclick="closeRecap()">✕</button></div>
+    <div class="modal-body">
+      <div id="recap-content"></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-green" style="flex:1" onclick="downloadRecap()">⬇️ Image</button>
+        <button class="btn btn-icon" onclick="copyRecapText()">📋 Texte</button>
+        <button class="btn btn-icon" onclick="closeRecap()">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Suspense -->
+<div class="suspense-overlay" id="suspense-overlay">
+  <div class="suspense-label">🏆 Stake World Chat Tournament 2026</div>
+  <div class="suspense-rank" id="suspense-rank"></div>
+  <div class="suspense-name" id="suspense-name"></div>
+  <div class="suspense-score" id="suspense-score"></div>
+  <button class="suspense-btn" id="suspense-btn" onclick="suspenseNext()">Suivant ▶</button>
+  <div class="suspense-skip" onclick="closeSuspense()">Passer</div>
+</div>
+
+<!-- Chat panneau latéral -->
+<button class="chat-float-btn" id="chat-float-btn" onclick="toggleChatPanel()" title="Chat en direct">
+  💬
+  <div class="chat-notif" id="chat-notif-badge"></div>
+</button>
+
+<div class="chat-panel" id="chat-panel">
+  <div class="chat-panel-header">
+    <span class="chat-panel-icon">💬</span>
+    <span class="chat-panel-title">Chat en direct</span>
+    <span class="chat-panel-online" id="chat-panel-online">● en ligne</span>
+    <button class="chat-panel-close" onclick="toggleChatPanel()">✕</button>
+  </div>
+  <div id="chat-panel-body" style="display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0;"></div>
+</div>
+
+<script>
+const PROXY='https://proofread-judgingly-grime.ngrok-free.dev';
+const HEADERS={'ngrok-skip-browser-warning':'true'};
+const FIREBASE='https://alerte-rain-default-rtdb.europe-west1.firebasedatabase.app';
+const TOURNAMENT_END=new Date('2026-07-14T23:59:59');
+const TOPIC_URLS={fr:'https://stakecommunity.com/topic/174177',ru:'https://stakecommunity.com/topic/174194',ur:'https://stakecommunity.com/topic/174197',fi:'https://stakecommunity.com/topic/174183',ng:'https://stakecommunity.com/topic/174192',es:'https://stakecommunity.com/topic/174182',jp:'https://stakecommunity.com/topic/174257',pl:'https://stakecommunity.com/topic/174193',th:'https://stakecommunity.com/topic/174195',pt:'https://stakecommunity.com/topic/174178',no:'https://stakecommunity.com/topic/174258',tr:'https://stakecommunity.com/topic/174196',ph:'https://stakecommunity.com/topic/174185',ar:'https://stakecommunity.com/topic/174181',cn:'https://stakecommunity.com/topic/174199',de:'https://stakecommunity.com/topic/174179',en:'https://stakecommunity.com/topic/174176',vn:'https://stakecommunity.com/topic/174198',in:'https://stakecommunity.com/topic/174186',id:'https://stakecommunity.com/topic/174190',kr:'https://stakecommunity.com/topic/174191'};
+
+let data=null,currentTab='global',sortCol='wonBets',sortDir=-1;
+let autoRefreshTimer=null,timelineTimer=null,liveBarTimer=null,chatTimer=null;
+let lastRecentBets=[],prevCountryRanks={};
+let currentPlayerAuthor=null,currentPlayerCountry=null;
+let chatPseudo=localStorage.getItem('chat_pseudo')||null;
+let followed=JSON.parse(localStorage.getItem('followed_players')||'[]');
+let lastBetCount=0;
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function pct(a,b){return b>0?Math.round((a/b)*100):0;}
+function timeAgo(iso){if(!iso)return '';const d=(Date.now()-new Date(iso))/1000;if(d<60)return 'à l\'instant';if(d<3600)return Math.floor(d/60)+'min';if(d<86400)return Math.floor(d/3600)+'h';return Math.floor(d/86400)+'j';}
+function statusIcon(s){return s==='won'?'✅':s==='lost'?'❌':s==='cashout'?'💰':s==='adjusted'?'🔄':s==='void'?'🚫':'⏳';}
+function betUrl(id){return `https://stake.bet/fr/sports/home?iid=sport%3A${id}&source=chat&modal=bet`;}
+
+// Theme
+function toggleTheme(){const dark=document.documentElement.getAttribute('data-theme')==='dark';document.documentElement.setAttribute('data-theme',dark?'light':'dark');document.querySelector('[onclick="toggleTheme()"]').textContent=dark?'🌙':'☀️';}
+
+// Countdown
+function updateCountdown(){const diff=TOURNAMENT_END-new Date();if(diff<=0)return;const d=Math.floor(diff/86400000),h=Math.floor((diff%86400000)/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000);['cd-days','cd-hours','cd-mins','cd-secs'].forEach((id,i)=>{document.getElementById(id).textContent=String([d,h,m,s][i]).padStart(2,'0');});document.getElementById('header-days').textContent=`J-${d}`;}
+setInterval(updateCountdown,1000);updateCountdown();
+
+// Load
+async function loadData(){
+  const btn=document.getElementById('btn-refresh');
+  btn.disabled=true;btn.textContent='⏳';
+  if(currentTab!=='about')document.getElementById('main-content').innerHTML=`<div class="loader"><div class="spinner"></div>Chargement...</div>`;
+  try{
+    const r=await fetch(`${PROXY}/scrape`,{headers:HEADERS});
+    if(!r.ok)throw new Error(`HTTP ${r.status}`);
+    data=await r.json();
+    checkOvertakes();updateStats();buildTabs();buildCountryFilter();renderCurrentTab();
+    document.getElementById('live-badge').style.display='flex';
+    document.getElementById('status-text').textContent=`${data.totalBets?.toLocaleString()} bets · ${data.totalWon?.toLocaleString()} gagnants · ${new Date(data.scrapedAt).toLocaleTimeString('fr-FR')}`;
+    document.getElementById('proxy-status').innerHTML=`<span style="color:var(--green)">✅ Connecté</span>`;
+    startTimelinePolling();startLiveBar();checkFollowedNotifs();
+    if(autoRefreshTimer)clearTimeout(autoRefreshTimer);
+    autoRefreshTimer=setTimeout(loadData,3600000);
+    checkNotificationPermission();checkPlayerProfile();
+  }catch(err){
+    document.getElementById('main-content').innerHTML=`<div class="error-banner">${esc(err.message)}</div><div class="empty"><div class="empty-icon">❌</div><p>${esc(err.message)}</p></div>`;
+    document.getElementById('proxy-status').innerHTML=`<span style="color:var(--red)">❌ Hors ligne</span>`;
+  }finally{btn.disabled=false;btn.textContent='↻ Actualiser';}
+}
+
+function updateStats(){const cl=data.countryLeaderboard||[];document.getElementById('stat-chats').textContent=cl.filter(c=>c.totalBets>0).length||'—';document.getElementById('stat-won').textContent=data.totalWon?.toLocaleString()||'—';document.getElementById('stat-total').textContent=data.totalBets?.toLocaleString()||'—';document.getElementById('stat-users').textContent=data.totalUsers||'—';document.getElementById('stat-winrate').textContent=pct(data.totalWon,data.totalBets)+'%';}
+
+function checkPlayerProfile(){const p=new URLSearchParams(window.location.search).get('player');if(p&&data){const u=(data.leaderboard||[]).find(x=>x.author.toLowerCase()===p.toLowerCase());if(u)openPlayer(u.author,u.country);}}
+
+// Overtakes
+function checkOvertakes(){const cl=data?.countryLeaderboard||[];cl.forEach((c,i)=>{const prev=prevCountryRanks[c.country];if(prev!==undefined&&prev>i){showOvertakeAlert(c,i+1,prev+1);const el=document.querySelector(`[data-country="${c.country}"]`);if(el)el.classList.add('overtaken');}prevCountryRanks[c.country]=i;});}
+function showOvertakeAlert(c,newR,oldR){const div=document.createElement('div');div.style.cssText=`position:fixed;top:70px;right:20px;background:var(--bg2);border:1px solid var(--green);border-radius:10px;padding:12px 16px;z-index:150;font-size:13px;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:slideIn .3s ease;max-width:280px;`;div.innerHTML=`<div style="font-weight:700;color:var(--green)">🚀 Dépassement !</div><div style="color:var(--text2);margin-top:4px">${c.flag} <strong>${c.name}</strong> passe #${oldR} → #${newR} !</div>`;document.body.appendChild(div);setTimeout(()=>div.remove(),5000);launchConfetti({clientX:window.innerWidth/2});}
+
+// Tabs
+function buildTabs(){const tabsEl=document.getElementById('tabs');const cl=data.countryLeaderboard||[];let html=`<div class="tab ${currentTab==='global'?'active':''}" onclick="showTab('global')" id="tab-global">🌍 Global</div>`;for(const c of cl){if(!c.totalBets)continue;html+=`<div class="tab ${currentTab===c.country?'active':''}" onclick="showTab('${c.country}')" id="tab-${c.country}">${c.flag} ${c.name} <span style="color:var(--green)">${c.wonBets}</span></div>`;}html+=`<div class="tab ${currentTab==='about'?'active':''}" onclick="showTab('about')" id="tab-about">ℹ️ À propos</div>`;tabsEl.innerHTML=html;}
+function buildCountryFilter(){const sel=document.getElementById('country-filter');const cl=data.countryLeaderboard||[];sel.innerHTML='<option value="">Tous les pays</option>';for(const c of cl)if(c.totalBets)sel.innerHTML+=`<option value="${c.country}">${c.flag} ${c.name}</option>`;}
+function showTab(tab){currentTab=tab;document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));const el=document.getElementById(`tab-${tab}`);if(el)el.classList.add('active');renderCurrentTab();}
+function renderCurrentTab(){if(currentTab==='global')renderGlobal();else if(currentTab==='about')renderAbout();else renderCountry(currentTab);}
+
+// Badges
+function getBadges(u,allLb,country){const badges=[];if(u.wonBets>=100)badges.push({icon:'👑',title:'Champion: +100 bets gagnants'});else if(u.wonBets>=50)badges.push({icon:'🔥',title:'En feu: +50 bets gagnants'});if(u.totalBets>=5&&pct(u.wonBets,u.totalBets)>=90)badges.push({icon:'🎯',title:'Précis: +90% win rate'});else if(u.totalBets>=5&&pct(u.wonBets,u.totalBets)>=80)badges.push({icon:'⭐',title:'+80% win rate'});const top=allLb.filter(x=>x.country===country).sort((a,b)=>b.wonBets-a.wonBets)[0];if(top&&top.author===u.author)badges.push({icon:'🏆',title:'Top du chat'});if(isUserToday(u))badges.push({icon:'📅',title:'A parié aujourd\'hui'});if(followed.includes(u.author))badges.push({icon:'👁️',title:'Suivi'});return badges;}
+function renderBadges(badges){return badges.map(b=>`<span class="badge-trophy" title="${esc(b.title)}">${b.icon}</span>`).join('');}
+function isUserToday(u){const today=new Date(),d=String(today.getDate()).padStart(2,'0'),m=String(today.getMonth()+1).padStart(2,'0'),y=today.getFullYear();return(u.bets||[]).some(b=>b.date&&b.date.includes(`${d}/${m}/${y}`));}
+
+// Streak
+function computeStreak(u){const bets=(u.bets||[]).filter(b=>b.status==='won'&&b.date).sort((a,b)=>new Date(b.date)-new Date(a.date));if(!bets.length)return 0;let streak=0,prev=null;for(const b of bets){const d=new Date(b.date);d.setHours(0,0,0,0);if(!prev){prev=d;streak=1;continue;}const diff=(prev-d)/86400000;if(diff<=1&&diff>=0){if(diff>=1)streak++;prev=d;}else break;}return streak;}
+
+// Analytics
+function getHourlyStats(lb){const h=Array(24).fill(0).map(()=>({won:0,total:0}));for(const u of lb){for(const b of(u.bets||[])){if(!b.date)continue;const m=b.date.match(/(\d{2}):\d{2}/);if(!m)continue;const hr=parseInt(m[1]);h[hr].total++;if(b.status==='won')h[hr].won++;}}return h;}
+function getBetTypes(lb){let s=0,sw=0,c=0,cw=0;for(const u of lb){for(const b of(u.bets||[])){if(b.odds&&b.odds>3){c++;if(b.status==='won')cw++;}else{s++;if(b.status==='won')sw++;}}}return{simple:s,simpleWon:sw,combined:c,combinedWon:cw};}
+function getBetOfDay(lb){const today=new Date(),d=String(today.getDate()).padStart(2,'0'),m=String(today.getMonth()+1).padStart(2,'0'),y=today.getFullYear();const todayStr=`${d}/${m}/${y}`;let best=null;for(const u of lb){for(const b of(u.bets||[])){if(b.status==='won'&&b.odds&&b.date&&b.date.includes(todayStr)){if(!best||b.odds>best.odds)best={...b,author:u.author,country:u.country};}}}return best;}
+
+// Render Global
+function renderGlobal(){
+  const cl=data.countryLeaderboard||[],allLb=data.leaderboard||[];
+  if(!cl.length){document.getElementById('main-content').innerHTML=`<div class="empty"><div class="empty-icon">🌍</div><p>Aucune donnée.</p></div>`;return;}
+  const medals=['🥇','🥈','🥉'],rankCls=['rank-1','rank-2','rank-3'];
+  const mostActive=[...allLb].sort((a,b)=>b.totalBets-a.totalBets)[0];
+  const bestWr=[...allLb].filter(u=>u.totalBets>=5).sort((a,b)=>pct(b.wonBets,b.totalBets)-pct(a.wonBets,a.totalBets))[0];
+  const countries=data.countries||{};
+  const botd=getBetOfDay(allLb);
+  const topOdds=allLb.flatMap(u=>(u.bets||[]).filter(b=>b.odds&&b.odds>=10&&b.status==='won').map(b=>({...b,author:u.author,flag:(countries[u.country]||{}).flag||'🌍'}))).sort((a,b)=>b.odds-a.odds).slice(0,5);
+
+  // Lancer le fetch des matchs
+  setTimeout(()=>{if(!matchesData.length)startMatchesPolling();else renderMatchesWidget();},100);
+
+  // Colonne GAUCHE : widget matchs CdM
+  const matchesCol = `<div id="matches-widget-container" class="col-left"><div class="match-empty" style="padding:16px;text-align:center;color:var(--text3);font-size:11px">Chargement...</div></div>`;
+
+  // Colonne CENTRE : stats + classement + paris fous + pending
+  let centerCol = '';
+  if(botd)centerCol+=`<div class="botd"><div class="botd-label">⭐ Bet of the Day</div><div class="botd-main"><div><div class="botd-author" onclick="openPlayerByAuthor('${esc(botd.author)}')" style="cursor:pointer">${esc(botd.author)}</div><div class="botd-sub">${(countries[botd.country]||{}).flag||''} <a href="${betUrl(botd.betId)}" target="_blank" style="color:var(--text3);font-family:monospace;font-size:11px">${botd.betId}</a></div></div><div class="botd-odds">×${botd.odds}</div></div></div>`;
+  centerCol+=`<div class="widget-grid"><div class="widget"><span class="widget-icon">🏃</span><div class="widget-info"><div class="widget-label">Plus actif</div><div class="widget-value" onclick="openPlayerByAuthor('${esc(mostActive?.author||'')}')" style="cursor:pointer">${esc(mostActive?.author||'—')}</div><div class="widget-sub">${(countries[mostActive?.country]||{}).flag||''} ${mostActive?.totalBets||0} bets</div></div><div class="widget-big" style="color:var(--blue)">${mostActive?.totalBets||0}</div></div><div class="widget"><span class="widget-icon">🎯</span><div class="widget-info"><div class="widget-label">Meilleur win rate</div><div class="widget-value" onclick="openPlayerByAuthor('${esc(bestWr?.author||'')}')" style="cursor:pointer">${esc(bestWr?.author||'—')}</div><div class="widget-sub">${(countries[bestWr?.country]||{}).flag||''} ${bestWr?.wonBets||0}/${bestWr?.totalBets||0}</div></div><div class="widget-big" style="color:var(--amber)">${pct(bestWr?.wonBets||0,bestWr?.totalBets||1)}%</div></div></div>`;
+  centerCol+=`<div class="section-title">🏆 Classement des chats</div><div class="country-grid">`;
+  cl.forEach((c,i)=>{if(!c.totalBets)return;const wr=pct(c.wonBets,c.totalBets);centerCol+=`<div class="country-card ${rankCls[i]||''}" onclick="showTab('${c.country}')" data-country="${c.country}"><span class="country-winrate">${wr}%</span><div class="country-rank">${medals[i]||`#${i+1}`}</div><div class="country-name">${c.flag} ${esc(c.name)}</div><div class="country-won">${c.wonBets}</div><div class="country-sub">${c.totalBets} soumis · ${c.users} joueurs</div><a class="country-link" href="${TOPIC_URLS[c.country]||'#'}" target="_blank" onclick="event.stopPropagation()">📎 Voir le topic</a></div>`;});
+  centerCol+=`</div>`;
+  if(topOdds.length){centerCol+=`<div class="section-title">🎲 Paris fous gagnants (cote ≥ 10)</div>`;topOdds.forEach((b,i)=>{centerCol+=`<div class="risky-row"><span class="risky-rank">${i+1}</span><span style="font-size:14px">${b.flag}</span><span class="risky-author" onclick="openPlayerByAuthor('${esc(b.author)}')" style="cursor:pointer">${esc(b.author)}</span><a class="risky-bet" href="${betUrl(b.betId)}" target="_blank">${b.betId}</a><span class="risky-status">✅</span><span class="risky-odds">×${b.odds}</span></div>`;});}
+  centerCol+=renderGlobalPending();
+
+  // Colonne DROITE : feed live + chat
+  const rightCol = `<div class="col-right">${renderTimelineHTML()}</div>`;
+
+  let html=`<div class="layout-3col">${matchesCol}<div>${centerCol}</div>${rightCol}</div>`;
+  document.getElementById('main-content').innerHTML=html;
+  initChat();
+}
+
+// Render Country
+function renderCountry(country){
+  const countries=data.countries||{};
+  const info=countries[country]||{name:country,flag:'🌍'};
+  let lb=(data.leaderboard||[]).filter(u=>u.country===country).sort((a,b)=>b.wonBets-a.wonBets);
+  if(!lb.length){document.getElementById('main-content').innerHTML=`<div class="empty"><div class="empty-icon">${info.flag}</div><p>Aucune donnée.</p></div>`;return;}
+  const maxWon=lb[0]?.wonBets||1,medals=['🥇','🥈','🥉'];
+  const top3=lb.slice(0,3);
+  const mostActive=[...lb].sort((a,b)=>b.totalBets-a.totalBets)[0];
+  const totalWon=lb.reduce((s,u)=>s+u.wonBets,0),totalBets=lb.reduce((s,u)=>s+u.totalBets,0);
+  const oneWeekAgo=Date.now()-7*86400000;
+  const weekLb=lb.map(u=>({...u,weekWon:(u.bets||[]).filter(b=>b.date&&new Date(b.date)>oneWeekAgo&&b.status==='won').length})).filter(u=>u.weekWon>0).sort((a,b)=>b.weekWon-a.weekWon).slice(0,3);
+  const topOdds=lb.flatMap(u=>(u.bets||[]).filter(b=>b.odds&&b.status==='won').map(b=>({...b,author:u.author}))).sort((a,b)=>b.odds-a.odds).slice(0,3);
+  const botd=getBetOfDay(lb);
+  const types=getBetTypes(lb);
+  const hours=getHourlyStats(lb);
+  const bestHour=hours.reduce((best,h,i)=>h.won>best.won?{...h,hour:i}:best,{won:0,hour:0});
+  let rest=applyFilters([...lb.slice(3)]);
+
+  let html=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><div class="section-title" style="flex:1;margin:0">${info.flag} ${esc(info.name)}</div><a href="${TOPIC_URLS[country]||'#'}" target="_blank" style="font-size:11px;color:var(--blue);text-decoration:none">📎 Topic</a></div>`;
+  if(botd)html+=`<div class="botd"><div class="botd-label">⭐ Bet of the Day</div><div class="botd-main"><div><div class="botd-author" onclick="openPlayer('${esc(botd.author)}','${country}')" style="cursor:pointer">${esc(botd.author)}</div><div class="botd-sub"><a href="${betUrl(botd.betId)}" target="_blank" style="color:var(--text3);font-family:monospace;font-size:11px">${botd.betId}</a></div></div><div class="botd-odds">×${botd.odds}</div></div></div>`;
+  html+=`<div class="widget-grid"><div class="widget"><span class="widget-icon">🏃</span><div class="widget-info"><div class="widget-label">Plus actif</div><div class="widget-value">${esc(mostActive?.author||'—')}</div><div class="widget-sub">${mostActive?.totalBets||0} bets</div></div><div class="widget-big" style="color:var(--blue)">${mostActive?.totalBets||0}</div></div><div class="widget"><span class="widget-icon">🎯</span><div class="widget-info"><div class="widget-label">Win rate du chat</div><div class="widget-value">${info.flag} ${esc(info.name)}</div><div class="widget-sub">${totalWon} / ${totalBets}</div></div><div class="widget-big" style="color:var(--amber)">${pct(totalWon,totalBets)}%</div></div></div>`;
+  html+=`<div class="widget-grid"><div class="widget"><span class="widget-icon">1️⃣</span><div class="widget-info"><div class="widget-label">Paris simples (cote ≤3)</div><div class="widget-value">${types.simpleWon}/${types.simple}</div></div><div class="widget-big" style="color:var(--green)">${pct(types.simpleWon,types.simple)}%</div></div><div class="widget"><span class="widget-icon">🔗</span><div class="widget-info"><div class="widget-label">Paris combinés (cote >3)</div><div class="widget-value">${types.combinedWon}/${types.combined}</div></div><div class="widget-big" style="color:var(--orange)">${pct(types.combinedWon,types.combined)}%</div></div></div>`;
+  if(bestHour.won>0)html+=`<div class="widget" style="margin-bottom:1rem"><span class="widget-icon">🕐</span><div class="widget-info"><div class="widget-label">Heure la plus gagnante</div><div class="widget-value">${bestHour.hour}h - ${bestHour.hour+1}h</div><div class="widget-sub">${bestHour.won} gagnants sur ${bestHour.total}</div></div><div class="widget-big" style="color:var(--purple)">${pct(bestHour.won,bestHour.total)}%</div></div>`;
+  if(weekLb.length){html+=`<div class="section-title">📅 Top 3 de la semaine</div><div class="podium" style="grid-template-columns:repeat(${weekLb.length},1fr)">`;weekLb.forEach((u,i)=>html+=`<div class="podium-card rank-${i+1}" onclick="openPlayer('${esc(u.author)}','${country}')"><div class="podium-medal">${medals[i]}</div><div class="podium-name">${esc(u.author)}</div><div class="podium-score">${u.weekWon}</div><div class="podium-sub">cette semaine</div></div>`);html+=`</div>`;}
+  html+=`<div class="section-title">🏆 Podium général</div><div class="podium">`;
+  top3.forEach((u,i)=>{const wr=pct(u.wonBets,u.totalBets),badges=getBadges(u,data.leaderboard||[],country),today=isUserToday(u);html+=`<div class="podium-card rank-${i+1}" onclick="openPlayer('${esc(u.author)}','${country}')">${u.avatar?`<div class="podium-avatar"><img src="${esc(u.avatar)}" onerror="this.style.display='none'"></div>`:''}<div class="podium-medal" onmouseenter="launchConfetti(event)">${medals[i]}</div><div class="podium-name">${esc(u.author)}${today?` <span class="today-badge">Aujourd'hui</span>`:''}</div><div class="podium-score">${u.wonBets}</div><div class="podium-winrate">${wr}% win rate</div><div class="podium-sub">${u.totalBets} soumis · ${u.lostBets} perdus</div><div class="podium-badges">${renderBadges(badges)}</div></div>`;});
+  html+=`</div>`;
+  if(topOdds.length){html+=`<div class="section-title">🎲 Paris gagnants les plus risqués</div>`;topOdds.forEach((b,i)=>{html+=`<div class="risky-row"><span class="risky-rank">${i+1}</span><span class="risky-author" onclick="openPlayer('${esc(b.author)}','${country}')" style="cursor:pointer">${esc(b.author)}</span><a class="risky-bet" href="${betUrl(b.betId)}" target="_blank">${b.betId}</a><span class="risky-status">✅</span><span class="risky-odds">×${b.odds}</span></div>`;});}
+  if(rest.length){
+    html+=`<div class="section-title">📋 Classement complet</div><table><thead><tr><th>#</th><th>Pseudo</th><th class="right" onclick="sortBy('wonBets')">✅</th><th class="right" onclick="sortBy('lostBets')">❌</th><th class="right" onclick="sortBy('cashoutBets')">💰</th><th class="right" onclick="sortBy('adjustedBets')">🔄</th><th class="right" onclick="sortBy('voidBets')">🚫</th><th class="right" onclick="sortBy('unknownBets')">⏳</th><th class="right" onclick="sortBy('totalBets')">Total</th><th class="right" onclick="sortBy('winrate')">Win%</th></tr></thead><tbody>`;
+    rest.forEach((u,i)=>{const w=pct(u.wonBets,u.totalBets),badges=getBadges(u,data.leaderboard||[],country),today=isUserToday(u);html+=`<tr class="clickable ${today?'today':''}" onclick="openPlayer('${esc(u.author)}','${country}')"><td class="rank-cell">${i+4}</td><td><div class="username-cell">${u.avatar?`<div class="user-avatar"><img src="${esc(u.avatar)}" onerror="this.parentElement.style.display='none'"></div>`:''}<div><div class="user-name">${esc(u.author)}${today?` <span class="today-badge">Aujourd'hui</span>`:''}</div><div class="user-badges">${renderBadges(badges)}</div><div class="progress-bar"><div class="progress-fill" style="width:${pct(u.wonBets,maxWon)}%"></div></div></div></div></td><td class="won-cell">${u.wonBets}</td><td class="lost-cell">${u.lostBets}</td><td class="cashout-cell">${u.cashoutBets||0}</td><td class="adjusted-cell">${u.adjustedBets||0}</td><td class="void-cell">${u.voidBets||0}</td><td class="unk-cell">${u.unknownBets}</td><td class="total-cell">${u.totalBets}</td><td class="winrate-cell">${w}%</td></tr>`;});
+    html+=`</tbody></table>`;
+  }
+  html+=renderPendingSection(lb);
+  document.getElementById('main-content').innerHTML=html;
+  document.getElementById('toolbar-count').textContent=`${lb.length} joueurs`;
+}
+
+// Filters
+function applyFilters(lb){const search=document.getElementById('search-input')?.value?.toLowerCase()||'';const cf=document.getElementById('country-filter')?.value||'';return lb.filter(u=>(!search||u.author.toLowerCase().includes(search))&&(!cf||u.country===cf)).sort((a,b)=>{const va=sortCol==='winrate'?pct(a.wonBets,a.totalBets):(a[sortCol]||0);const vb=sortCol==='winrate'?pct(b.wonBets,b.totalBets):(b[sortCol]||0);return(va-vb)*sortDir;});}
+function filterTable(){renderCurrentTab();}
+function sortBy(col){if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=-1;}renderCurrentTab();}
+
+// Player modal
+async function openPlayer(author,country){
+  currentPlayerAuthor=author;currentPlayerCountry=country;
+  document.getElementById('player-overlay').classList.add('open');
+  document.getElementById('player-modal-title').textContent=author;
+  updateFollowBtn();
+  document.getElementById('player-modal-body').innerHTML=`<div class="loader"><div class="spinner"></div></div>`;
+  history.replaceState(null,'',`?player=${encodeURIComponent(author)}`);
+  try{
+    const r=await fetch(`${PROXY}/player/${encodeURIComponent(author)}`,{headers:HEADERS});
+    const d=await r.json();
+    const countries=data?.countries||{},info=countries[country]||{name:country,flag:'🌍'};
+    const userInLb=(data.leaderboard||[]).find(u=>u.author===author);
+    const badges=userInLb?getBadges(userInLb,data.leaderboard||[],country):[];
+    const streak=userInLb?computeStreak(userInLb):0;
+    const shareUrl=`${window.location.origin}${window.location.pathname}?player=${encodeURIComponent(author)}`;
+    let html=`<div class="profile-header"><div class="profile-avatar-big">${d.avatar?`<img src="${esc(d.avatar)}" onerror="this.style.display='none'">`:''}</div><div class="profile-info"><div class="profile-name">${esc(author)}</div><div class="profile-country">${info.flag} ${esc(info.name)}</div><div class="profile-badges-big">${badges.map(b=>`<span class="profile-badge" title="${esc(b.title)}">${b.icon}</span>`).join('')}</div></div><button class="share-profile-btn" onclick="copyToClipboard('${esc(shareUrl)}',this)">🔗 Partager le profil</button></div>`;
+    html+=`<div class="profile-stats"><div class="profile-stat"><div class="profile-stat-val" style="color:var(--green)">${d.won}</div><div class="profile-stat-label">Gagnés</div></div><div class="profile-stat"><div class="profile-stat-val" style="color:var(--amber)">${d.winrate}%</div><div class="profile-stat-label">Win rate</div></div><div class="profile-stat"><div class="profile-stat-val" style="color:var(--red)">${d.lost}</div><div class="profile-stat-label">Perdus</div></div><div class="profile-stat"><div class="profile-stat-val">${d.total}</div><div class="profile-stat-label">Total</div></div></div>`;
+    if(streak>0)html+=`<div class="profile-streak"><span class="streak-fire">🔥</span><div><div class="streak-val">${streak}</div><div class="streak-label">jours consécutifs avec un bet gagnant</div></div></div>`;
+    if(d.bets&&d.bets.length>1){const wonByDay={};d.bets.filter(b=>b.status==='won'&&b.date).forEach(b=>{const day=b.date.substring(0,10);wonByDay[day]=(wonByDay[day]||0)+1;});const days=Object.keys(wonByDay).sort().slice(-14);if(days.length>1){let cum=0;const vals=days.map(d=>{cum+=wonByDay[d];return cum;});html+=`<div class="chart-container"><div class="chart-title">📈 Progression des bets gagnants</div><canvas id="player-chart" height="70"></canvas></div>`;setTimeout(()=>{const ctx=document.getElementById('player-chart');if(!ctx)return;new Chart(ctx,{type:'line',data:{labels:days,datasets:[{label:'Cumulés',data:vals,borderColor:'#4ade80',backgroundColor:'rgba(74,222,128,.1)',tension:.4,fill:true}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#64748b',font:{size:10}}},y:{ticks:{color:'#64748b',font:{size:10}}}}}});},100);}}
+    if(d.topOdds?.length){html+=`<div class="section-title" style="margin-top:0">🎲 Top paris risqués</div>`;d.topOdds.forEach((b,i)=>{html+=`<div class="risky-row"><span class="risky-rank">${i+1}</span><a class="risky-bet" href="${betUrl(b.betId)}" target="_blank">${b.betId}</a><span class="risky-status">✅</span><span class="risky-odds">×${b.odds}</span></div>`;});}
+    const groups=[{key:'won',label:'✅ Gagnés',color:'var(--green)'},{key:'lost',label:'❌ Perdus',color:'var(--red)'},{key:'cashout',label:'💰 Cashout',color:'var(--orange)'},{key:'adjusted',label:'🔄 Ajusté',color:'var(--purple)'},{key:'void',label:'🚫 Annulé',color:'var(--text2)'},{key:'unknown',label:'⏳ Inconnu',color:'var(--text3)'}];
+    html+=`<div class="section-title">📋 Tous les bets</div>`;
+    for(const g of groups){const filtered=(d.bets||[]).filter(b=>b.status===g.key||(b.status==='pending'&&g.key==='unknown'));if(!filtered.length)continue;html+=`<div class="bet-group"><div class="bet-group-title" style="color:${g.color}">${g.label} (${filtered.length})</div><div class="bet-chips">`;filtered.forEach(b=>{html+=`<a class="bet-chip ${g.key}" href="${betUrl(b.betId)}" target="_blank">${b.betId}${b.odds?` ×${b.odds}`:''}</a>`;});html+=`</div></div>`;}
+    document.getElementById('player-modal-body').innerHTML=html;
+  }catch(err){document.getElementById('player-modal-body').innerHTML=`<div class="error-banner">${esc(err.message)}</div>`;}
+}
+function openPlayerByAuthor(author){const u=(data?.leaderboard||[]).find(x=>x.author===author);if(u)openPlayer(u.author,u.country);}
+function closePlayer(){document.getElementById('player-overlay').classList.remove('open');history.replaceState(null,'',window.location.pathname);}
+
+// Follow
+function toggleFollow(){if(!currentPlayerAuthor)return;const idx=followed.indexOf(currentPlayerAuthor);if(idx>-1)followed.splice(idx,1);else followed.push(currentPlayerAuthor);localStorage.setItem('followed_players',JSON.stringify(followed));updateFollowBtn();}
+function updateFollowBtn(){const btn=document.getElementById('follow-btn-modal');if(!btn||!currentPlayerAuthor)return;const isF=followed.includes(currentPlayerAuthor);btn.textContent=isF?'👁️ Suivi':'+ Suivre';btn.className='follow-btn'+(isF?' following':'');}
+function checkFollowedNotifs(){if(!data||!followed.length)return;const lb=data.leaderboard||[];for(const author of followed){const u=lb.find(x=>x.author===author);if(!u)continue;const todayWon=(u.bets||[]).filter(b=>b.status==='won'&&isUserToday(u)).length;if(todayWon>0)sendNotification(`👁️ ${author} a ${todayWon} bet(s) gagnant(s) aujourd'hui !`);}}
+
+// Pending
+function renderGlobalPending(){const allLb=data.leaderboard||[],countries=data.countries||{};const pu=allLb.filter(u=>(u.bets||[]).some(b=>b.status==='unknown'||b.status==='pending'));if(!pu.length)return '';const total=pu.reduce((s,u)=>s+(u.bets||[]).filter(b=>b.status==='unknown'||b.status==='pending').length,0);let html=`<div class="pending-widget"><div class="pending-widget-header"><span class="pending-widget-title">⏳ Bets en attente</span><span class="pending-widget-count">${total} · ${pu.length} joueurs</span></div><div class="pending-widget-body">`;pu.forEach(u=>{const p=(u.bets||[]).filter(b=>b.status==='unknown'||b.status==='pending');const flag=(countries[u.country]||{}).flag||'🌍';html+=`<div class="pending-row"><span class="pending-flag">${flag}</span><span class="pending-author">${esc(u.author)}</span><div class="pending-chips-wrap">`;p.forEach(b=>{html+=`<a class="pending-chip" href="${betUrl(b.id||b.betId)}" target="_blank">${b.id||b.betId}</a>`;});html+=`</div></div>`;});return html+`</div></div>`;}
+function renderPendingSection(lb){const pu=lb.filter(u=>(u.bets||[]).some(b=>b.status==='unknown'||b.status==='pending'));if(!pu.length)return '';const total=pu.reduce((s,u)=>s+(u.bets||[]).filter(b=>b.status==='unknown'||b.status==='pending').length,0);let html=`<div class="pending-widget" style="margin-top:1rem"><div class="pending-widget-header"><span class="pending-widget-title">⏳ Bets en attente</span><span class="pending-widget-count">${total}</span></div><div class="pending-widget-body">`;pu.forEach(u=>{const p=(u.bets||[]).filter(b=>b.status==='unknown'||b.status==='pending');html+=`<div class="pending-row"><span class="pending-author">${esc(u.author)}</span><div class="pending-chips-wrap">`;p.forEach(b=>{html+=`<a class="pending-chip" href="${betUrl(b.id||b.betId)}" target="_blank">${b.id||b.betId}</a>`;});html+=`</div></div>`;});return html+`</div></div>`;}
+
+// Timeline
+function renderTimelineHTML(bets){const items=bets||lastRecentBets,countries=data?.countries||{};let html=`<div class="timeline"><div class="timeline-header"><div class="tl-dot"></div><span class="timeline-title">🔴 Feed live</span><span style="font-size:10px;color:var(--text3)">${items.length}</span></div><div class="timeline-body" id="timeline-body">`;if(!items.length)html+=`<div class="tl-empty">En attente...</div>`;else items.forEach(b=>{const flag=(countries[b.country]||{}).flag||'🌍';html+=`<div class="tl-item"><span class="tl-flag">${flag}</span><span class="tl-author" onclick="openPlayerByAuthor('${esc(b.author)}')" style="cursor:pointer">${esc(b.author)}</span><a class="tl-bet" href="${betUrl(b.betId||b.id)}" target="_blank">${b.betId||b.id}</a><span class="tl-status">${statusIcon(b.status)}</span>${b.odds?`<span class="tl-odds">×${b.odds}</span>`:''}<span class="tl-time">${timeAgo(b.receivedAt)}</span></div>`;});return html+`</div></div>`;}
+async function startTimelinePolling(){if(timelineTimer)clearInterval(timelineTimer);timelineTimer=setInterval(async()=>{try{const r=await fetch(`${PROXY}/recent-bets`,{headers:HEADERS});const d=await r.json();const nb=d.bets||[];if(nb.length>lastRecentBets.length){const added=nb.slice(0,nb.length-lastRecentBets.length);const won=added.filter(b=>b.status==='won');if(won.length)sendNotification(`🏆 ${won.length} nouveau(x) bet(s) gagnant(s) !`);}lastRecentBets=nb;const tb=document.getElementById('timeline-body');if(tb&&currentTab==='global'){const countries=data?.countries||{};if(!nb.length){tb.innerHTML=`<div class="tl-empty">En attente...</div>`;return;}tb.innerHTML=nb.map(b=>{const flag=(countries[b.country]||{}).flag||'🌍';return `<div class="tl-item"><span class="tl-flag">${flag}</span><span class="tl-author" onclick="openPlayerByAuthor('${esc(b.author)}')" style="cursor:pointer">${esc(b.author)}</span><a class="tl-bet" href="${betUrl(b.betId||b.id)}" target="_blank">${b.betId||b.id}</a><span class="tl-status">${statusIcon(b.status)}</span>${b.odds?`<span class="tl-odds">×${b.odds}</span>`:''}<span class="tl-time">${timeAgo(b.receivedAt)}</span></div>`;}).join('');}}catch{}},10000);}
+
+// Live bar
+function startLiveBar(){if(liveBarTimer)clearInterval(liveBarTimer);liveBarTimer=setInterval(async()=>{try{const r=await fetch(`${PROXY}/health`,{headers:HEADERS});const d=await r.json();const bar=document.getElementById('live-bar'),val=document.getElementById('live-bar-val');if(d.totalBets>lastBetCount){lastBetCount=d.totalBets;if(bar)bar.classList.add('active');}if(val)val.textContent=`${d.totalBets?.toLocaleString()} bets`;}catch{}},5000);}
+
+// Chat Firebase
+function renderChatHTML(){return '';} // Chat déplacé en panneau flottant
+function initChat(){initFloatingChat();}
+
+let chatPanelOpen=false;
+let lastMsgCount=0;
+
+function toggleChatPanel(){
+  chatPanelOpen=!chatPanelOpen;
+  const panel=document.getElementById('chat-panel');
+  const btn=document.getElementById('chat-float-btn');
+  if(panel)panel.classList.toggle('open',chatPanelOpen);
+  if(btn)btn.classList.toggle('active',chatPanelOpen);
+  document.body.classList.toggle('chat-open',chatPanelOpen);
+  const badge=document.getElementById('chat-notif-badge');
+  if(badge&&chatPanelOpen){badge.style.display='none';lastMsgCount=0;}
+  if(chatPanelOpen)initFloatingChat();
+}
+
+function initFloatingChat(){
+  const body=document.getElementById('chat-panel-body');
+  if(!body)return;
+  if(!chatPseudo){
+    body.innerHTML=`<div class="chat-pseudo-wrap"><p>Choisis un pseudo pour rejoindre le chat en direct</p><input id="pseudo-input-float" placeholder="Ton pseudo..." maxlength="20" onkeydown="if(event.key==='Enter')savePseudoFloat()"><button onclick="savePseudoFloat()">Rejoindre 💬</button></div>`;
+  } else {
+    body.innerHTML=`<div class="chat-panel-messages" id="chat-messages"><div class="tl-empty">Chargement...</div></div><div class="chat-panel-input"><input id="chat-input" placeholder="Message..." maxlength="200" onkeydown="if(event.key==='Enter')sendChatMsg()"><button class="chat-panel-send" onclick="sendChatMsg()">↑</button></div>`;
+    loadChatMessages();
+  }
+}
+
+function savePseudoFloat(){
+  const input=document.getElementById('pseudo-input-float');
+  if(!input||!input.value.trim())return;
+  chatPseudo=input.value.trim().substring(0,20);
+  localStorage.setItem('chat_pseudo',chatPseudo);
+  initFloatingChat();
+}
+function savePseudo(){savePseudoFloat();}
+
+if(chatTimer)clearInterval(chatTimer);
+function loadChatMessages(){
+  const msgsEl=document.getElementById('chat-messages');
+  if(!msgsEl)return;
+  const emojis=['🔥','💀','😱','🎉','👑'];
+  const poll=async()=>{
+    try{
+      const r=await fetch(`${FIREBASE}/tournament_chat.json?orderBy="timestamp"&limitToLast=50`);
+      const d=await r.json();
+      if(!d){msgsEl.innerHTML=`<div class="tl-empty">Soyez le premier !</div>`;return;}
+      const msgs=Object.entries(d).map(([k,v])=>({id:k,...v})).sort((a,b)=>a.timestamp-b.timestamp);
+      // Notif nouveaux messages
+      if(msgs.length>lastMsgCount&&!chatPanelOpen){
+        const badge=document.getElementById('chat-notif-badge');
+        if(badge){badge.style.display='flex';badge.textContent=msgs.length-lastMsgCount;}
+      }
+      lastMsgCount=msgs.length;
+      msgsEl.innerHTML=msgs.map(m=>{
+        const isOwn=m.pseudo===chatPseudo;
+        const reactions=m.reactions||{};
+        return `<div class="chat-msg"><div class="chat-msg-av">${esc(m.pseudo||'?').substring(0,2).toUpperCase()}</div><div class="chat-msg-content"><div class="chat-msg-header"><span class="chat-msg-name ${isOwn?'own':''}">${esc(m.pseudo)}</span><span class="chat-msg-time">${timeAgo(new Date(m.timestamp).toISOString())}</span></div><div class="chat-msg-text">${esc(m.text)}</div></div></div>`;
+      }).join('');
+      msgsEl.scrollTop=msgsEl.scrollHeight;
+    }catch(e){}
+  };
+  poll();
+  if(chatTimer)clearInterval(chatTimer);
+  chatTimer=setInterval(poll,5000);
+}
+
+async function sendChatMsg(){
+  const input=document.getElementById('chat-input');
+  if(!input||!input.value.trim()||!chatPseudo)return;
+  const text=input.value.trim();input.value='';
+  try{await fetch(`${FIREBASE}/tournament_chat.json`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pseudo:chatPseudo,text,timestamp:Date.now()})});}catch(e){}
+}
+async function toggleReaction(msgId,emoji){
+  if(!chatPseudo)return;
+  try{const path=`${FIREBASE}/tournament_chat/${msgId}/reactions/${emoji}/${chatPseudo}.json`;const r=await fetch(path);const exists=await r.json();await fetch(path,{method:exists?'DELETE':'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(true)});loadChatMessages();}catch(e){}
+}
+
+// Présence en ligne via Firebase
+async function updateOnlineCount(){
+  try{
+    // Écrire notre présence
+    const myKey = 'user_'+Math.random().toString(36).substr(2,9);
+    const presencePath = `${FIREBASE}/tournament_presence/${myKey}.json`;
+    await fetch(presencePath,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({t:Date.now()})});
+    // Lire toutes les présences (actives dans les 60 dernières secondes)
+    const r=await fetch(`${FIREBASE}/tournament_presence.json`);
+    const d=await r.json();
+    if(d){
+      const now=Date.now();
+      const active=Object.values(d).filter(p=>p&&(now-p.t)<60000).length;
+      const el=document.getElementById('chat-panel-online');
+      if(el)el.textContent=`● ${active} en ligne`;
+    }
+  }catch(e){}
+}
+// Démarrer le polling chat même si le panneau est fermé (pour les notifs)
+setTimeout(()=>{loadChatMessages();updateOnlineCount();},2000);
+setInterval(updateOnlineCount,30000);
+
+// About
+function renderAbout(){document.getElementById('main-content').innerHTML=`<div style="max-width:700px;margin:0 auto"><div class="about-section"><h3>⚽ Qu'est-ce que le Stake World Chat Tournament ?</h3><p>Le Tournoi Mondial du Chat Stake est une compétition internationale organisée sur la plateforme Stake.com/Stake.bet. Les participants postent leurs paris sportifs sur les topics dédiés à chaque langue dans le forum Stake Community.</p></div><div class="about-section"><h3>📋 Règles du tournoi</h3><div class="about-rule"><div class="about-rule-num">1</div><p>Poster son pari sportif sur le topic de son chat avec le Bet ID (<code style="background:var(--bg3);padding:1px 5px;border-radius:3px">sport:XXXXXXXXX</code>)</p></div><div class="about-rule"><div class="about-rule-num">2</div><p>Seuls les paris gagnants sont comptabilisés dans le classement</p></div><div class="about-rule"><div class="about-rule-num">3</div><p>Chaque pari ne peut être compté qu'une seule fois</p></div><div class="about-rule"><div class="about-rule-num">4</div><p>Le tournoi se termine le <strong>14 juillet 2026</strong></p></div><div class="about-rule"><div class="about-rule-num">5</div><p>Le chat avec le plus de paris gagnants validés remporte le tournoi</p></div></div><div class="about-section"><h3>📊 Comment fonctionne ce dashboard ?</h3><p>Ce dashboard scrape automatiquement les topics du forum toutes les heures, vérifie chaque pari directement sur Stake.bet et met à jour le classement en temps réel.</p><ul style="margin-top:8px"><li>Statuts vérifiés directement sur Stake.bet (Gagné / Perte / Encaissé / Vide / Ajusté)</li><li>Paris en attente re-vérifiés à chaque run</li><li>Mise à jour automatique toutes les heures</li></ul></div><div class="about-section"><h3>🏆 Chats participants</h3><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:8px">${Object.entries(data?.countries||{}).map(([k,c])=>`<a href="${TOPIC_URLS[k]||'#'}" target="_blank" style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:8px 10px;font-size:12px;text-decoration:none;color:var(--text);display:flex;align-items:center;gap:6px;">${c.flag} ${c.name}</a>`).join('')}</div></div></div>`;}
+
+// Recap
+function generateRecap(){if(!data)return;const cl=data.countryLeaderboard||[],medals=['🥇','🥈','🥉'];const today=new Date().toLocaleDateString('fr-FR');const botd=getBetOfDay(data.leaderboard||[]);let html=`<div class="recap-card" id="recap-card"><div class="recap-title">⚽ Stake World Chat Tournament<br><span style="font-size:12px;font-weight:400;color:#94a3b8">${today}</span></div>`;cl.slice(0,5).forEach((c,i)=>html+=`<div class="recap-row"><span class="recap-label">${medals[i]||`#${i+1}`} ${c.flag} ${c.name}</span><span class="recap-value" style="color:#4ade80">${c.wonBets}</span></div>`);html+=`<div class="recap-row"><span class="recap-label">📊 Global</span><span class="recap-value">${data.totalWon?.toLocaleString()} / ${data.totalBets?.toLocaleString()}</span></div><div class="recap-row"><span class="recap-label">🎯 Win rate</span><span class="recap-value" style="color:#fbbf24">${pct(data.totalWon,data.totalBets)}%</span></div>`;if(botd)html+=`<div class="recap-row"><span class="recap-label">⭐ Bet of the Day</span><span class="recap-value" style="color:#fbbf24">${esc(botd.author)} ×${botd.odds}</span></div>`;html+=`<div style="text-align:center;margin-top:12px;font-size:10px;color:#64748b">StakePulse Tournament Dashboard</div></div>`;document.getElementById('recap-content').innerHTML=html;document.getElementById('recap-overlay').classList.add('open');}
+function closeRecap(){document.getElementById('recap-overlay').classList.remove('open');}
+async function downloadRecap(){const card=document.getElementById('recap-card');if(!card)return;const canvas=await html2canvas(card,{backgroundColor:'#0f1923',scale:2});const a=document.createElement('a');a.download=`recap-${new Date().toLocaleDateString('fr-FR').replace(/\//g,'-')}.png`;a.href=canvas.toDataURL();a.click();}
+function copyRecapText(){const cl=data?.countryLeaderboard||[],medals=['🥇','🥈','🥉'];let t=`⚽ Stake World Chat Tournament — ${new Date().toLocaleDateString('fr-FR')}\n`;cl.slice(0,3).forEach((c,i)=>t+=`${medals[i]} ${c.flag} ${c.name} : ${c.wonBets} gagnants\n`);t+=`\n📊 ${data.totalWon?.toLocaleString()} / ${data.totalBets?.toLocaleString()} · Win rate: ${pct(data.totalWon,data.totalBets)}%`;navigator.clipboard.writeText(t).then(()=>{const btn=event.target;btn.textContent='✅ Copié !';setTimeout(()=>btn.textContent='📋 Texte',2000);});}
+
+// Share
+function openShare(){const cl=data?.countryLeaderboard||[],medals=['🥇','🥈','🥉'];let t=`⚽ Stake World Chat Tournament 2026\n━━━━━━━━━━━━━━━━━━\n`;cl.slice(0,3).forEach((c,i)=>t+=`${medals[i]} ${c.flag} ${c.name} — ${c.wonBets} gagnants (${pct(c.wonBets,c.totalBets)}%)\n`);t+=`━━━━━━━━━━━━━━━━━━\n📊 ${data.totalWon?.toLocaleString()} / ${data.totalBets?.toLocaleString()} · ${data.totalUsers} joueurs`;document.getElementById('share-card-content').innerHTML=`<pre style="font-size:12px;color:var(--text);white-space:pre-wrap;font-family:monospace">${esc(t)}</pre>`;document.getElementById('share-overlay').classList.add('open');document.querySelector('[onclick="copyShareText()"]').dataset.text=t;}
+function closeShare(){document.getElementById('share-overlay').classList.remove('open');}
+function copyShareText(){const t=document.querySelector('[onclick="copyShareText()"]').dataset.text;navigator.clipboard.writeText(t).then(()=>{const btn=document.querySelector('[onclick="copyShareText()"]');btn.textContent='✅ Copié !';setTimeout(()=>btn.textContent='📋 Copier',2000);});}
+
+// Suspense
+let suspenseList=[],suspenseIdx=0;
+function startSuspense(){const cl=data?.countryLeaderboard||[];if(!cl.length)return;suspenseList=[...cl].filter(c=>c.totalBets>0).reverse();suspenseIdx=0;document.getElementById('suspense-overlay').classList.add('open');showSuspenseItem();}
+function showSuspenseItem(){const c=suspenseList[suspenseIdx];if(!c){closeSuspense();return;}const rank=suspenseList.length-suspenseIdx,medals=['🥇','🥈','🥉'];document.getElementById('suspense-rank').textContent=rank<=3?medals[rank-1]:`#${rank}`;document.getElementById('suspense-name').textContent=`${c.flag} ${c.name}`;document.getElementById('suspense-score').textContent=`${c.wonBets} bets gagnants`;document.getElementById('suspense-btn').textContent=suspenseIdx===suspenseList.length-1?'Fermer 🏆':'Suivant ▶';if(rank<=3)launchConfetti({clientX:window.innerWidth/2});}
+function suspenseNext(){suspenseIdx++;if(suspenseIdx>=suspenseList.length)closeSuspense();else showSuspenseItem();}
+function closeSuspense(){document.getElementById('suspense-overlay').classList.remove('open');}
+
+// Confetti
+function launchConfetti(e){const colors=['#4ade80','#fbbf24','#60a5fa','#f87171','#a78bfa','#f59e0b'];for(let i=0;i<20;i++){const el=document.createElement('div');el.className='confetti-piece';el.style.cssText=`left:${e.clientX+Math.random()*60-30}px;background:${colors[Math.floor(Math.random()*colors.length)]};animation-duration:${.8+Math.random()*.8}s;animation-delay:${Math.random()*.3}s;width:${6+Math.random()*6}px;height:${6+Math.random()*6}px;border-radius:${Math.random()>.5?'50%':'2px'}`;document.body.appendChild(el);setTimeout(()=>el.remove(),1500);}}
+
+// Notifications
+async function checkNotificationPermission(){if('Notification'in window&&Notification.permission==='default')await Notification.requestPermission();}
+function sendNotification(msg){if('Notification'in window&&Notification.permission==='granted')new Notification('⚽ StakePulse Tournament',{body:msg});}
+
+// Matches Widget
+let matchesData=[], matchesTab='upcoming', matchesTimer=null;
+const TEAM_FLAGS={'FRA':'🇫🇷','ARG':'🇦🇷','BRA':'🇧🇷','ENG':'🏴󠁧󠁢󠁥󠁮󠁧󠁿','GER':'🇩🇪','POR':'🇵🇹','ESP':'🇪🇸','ITA':'🇮🇹','NED':'🇳🇱','BEL':'🇧🇪','URU':'🇺🇾','MEX':'🇲🇽','JPN':'🇯🇵','KOR':'🇰🇷','MAR':'🇲🇦','SEN':'🇸🇳','GHA':'🇬🇭','NGA':'🇳🇬','AUS':'🇦🇺','USA':'🇺🇸','CAN':'🇨🇦','SUI':'🇨🇭','DEN':'🇩🇰','NOR':'🇳🇴','SWE':'🇸🇪','POL':'🇵🇱','CRO':'🇭🇷','SRB':'🇷🇸','TUR':'🇹🇷','SCO':'🏴󠁧󠁢󠁳󠁣󠁴󠁿','IRE':'🇮🇪','CPV':'🇨🇻','NZL':'🇳🇿','EGY':'🇪🇬','AUT':'🇦🇹','IRQ':'🇮🇶','JOR':'🇯🇴','DZA':'🇩🇿','UZB':'🇺🇿','PAN':'🇵🇦','COL':'🇨🇴','COD':'🇨🇩','BIH':'🇧🇦','QAT':'🇶🇦','RSA':'🇿🇦','ECU':'🇪🇨','CUW':'🇨🇼','CIV':'🇨🇮','TUN':'🇹🇳','HTI':'🇭🇹','CZE':'🇨🇿','SWE':'🇸🇪'};
+
+function getFlag(abbr){return TEAM_FLAGS[abbr]||'🏳️';}
+
+async function fetchMatches(){
+  try{
+    const r=await fetch(`${PROXY}/world-cup-scores`,{headers:HEADERS});
+    if(r.ok){const d=await r.json();matchesData=d.games||[];renderMatchesWidget();return;}
+  }catch{}
+  // Fallback direct API si proxy pas dispo
+  renderMatchesWidget();
+}
+
+function renderMatchesWidget(){
+  const now=Date.now();
+  const live=matchesData.filter(g=>g.status==='inprogress');
+  const recent=matchesData.filter(g=>g.status==='final').slice(-5).reverse();
+  const upcoming=matchesData.filter(g=>g.status==='scheduled').slice(0,8);
+
+  let html=`<div class="matches-widget">
+    <div class="matches-header">
+      <span style="font-size:16px">⚽</span>
+      <span class="matches-title">Coupe du Monde 2026${live.length>0?` <span style="color:#ef4444;font-size:10px;animation:pulse 1s infinite">● LIVE (${live.length})</span>`:''}</span>
+      <span class="matches-refresh" onclick="fetchMatches()">↻</span>
+    </div>
+    <div class="matches-tabs">
+      <div class="matches-tab ${matchesTab==='live'?'active':''}" onclick="setMatchesTab('live')">🔴 Live${live.length>0?` (${live.length})`:''}</div>
+      <div class="matches-tab ${matchesTab==='recent'?'active':''}" onclick="setMatchesTab('recent')">✅ Récents</div>
+      <div class="matches-tab ${matchesTab==='upcoming'?'active':''}" onclick="setMatchesTab('upcoming')">📅 À venir</div>
+    </div>
+    <div class="matches-body">`;
+
+  const games=matchesTab==='live'?live:matchesTab==='recent'?recent:upcoming;
+
+  if(!games.length){
+    html+=`<div class="match-empty">${matchesTab==='live'?'Aucun match en cours':'Aucun match disponible'}</div>`;
+  }else{
+    games.forEach(g=>{
+      const homeAbbr=g.home;
+      const awayAbbr=g.away;
+      const homeScore=g.score?.[homeAbbr]??0;
+      const awayScore=g.score?.[awayAbbr]??0;
+      const homeName=g.teams?.[homeAbbr]?.name||homeAbbr;
+      const awayName=g.teams?.[awayAbbr]?.name||awayAbbr;
+      const homeWin=g.status==='final'&&homeScore>awayScore;
+      const awayWin=g.status==='final'&&awayScore>homeScore;
+      const isLive=g.status==='inprogress';
+      const isScheduled=g.status==='scheduled';
+
+      let statusHtml='';
+      if(isLive)statusHtml=`<span class="match-status live">LIVE</span>`;
+      else if(isScheduled){
+        const d=new Date(g.start_time);
+        const time=d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+        const day=d.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'});
+        statusHtml=`<div style="text-align:center"><div class="match-status scheduled">${time}</div><div style="font-size:9px;color:var(--text3);margin-top:2px">${day}</div></div>`;
+      }else{
+        statusHtml=`<span class="match-status final">FT</span>`;
+      }
+
+      html+=`<div class="match-row">
+        <div class="match-teams">
+          <div class="match-team">
+            <span class="match-team-name">${getFlag(homeAbbr)} ${esc(homeName)}</span>
+            ${!isScheduled?`<span class="match-team-score ${homeWin?'winner':''}">${homeScore}</span>`:''}
+          </div>
+          <div class="match-team">
+            <span class="match-team-name">${getFlag(awayAbbr)} ${esc(awayName)}</span>
+            ${!isScheduled?`<span class="match-team-score ${awayWin?'winner':''}">${awayScore}</span>`:''}
+          </div>
+          ${isScheduled&&g.win_probability?`<div class="match-prob" style="margin-top:4px;display:flex;gap:2px;height:4px;">
+            <div class="match-prob-bar" style="width:${g.win_probability[homeAbbr]||0}%;background:var(--blue);border-radius:2px;"></div>
+            <div class="match-prob-bar" style="width:${g.win_probability.draw||0}%;background:var(--text3);border-radius:2px;"></div>
+            <div class="match-prob-bar" style="width:${g.win_probability[awayAbbr]||0}%;background:var(--purple);border-radius:2px;"></div>
+          </div><div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text3);margin-top:2px"><span>${g.win_probability[homeAbbr]||0}%</span><span>nul ${g.win_probability.draw||0}%</span><span>${g.win_probability[awayAbbr]||0}%</span></div>`:''}
+        </div>
+        ${statusHtml}
+      </div>`;
+    });
+  }
+
+  html+=`</div></div>`;
+
+  const el=document.getElementById('matches-widget-container');
+  if(el)el.innerHTML=html;
+}
+
+function setMatchesTab(tab){matchesTab=tab;renderMatchesWidget();}
+
+function startMatchesPolling(){
+  fetchMatches();
+  if(matchesTimer)clearInterval(matchesTimer);
+  matchesTimer=setInterval(fetchMatches,60000);
+}
+
+// Utils
+function copyToClipboard(text,btn){navigator.clipboard.writeText(text).then(()=>{const orig=btn.textContent;btn.textContent='✅ Copié !';setTimeout(()=>btn.textContent=orig,2000);});}
+
+// Init
+(async()=>{try{const r=await fetch(`${PROXY}/health`,{signal:AbortSignal.timeout(3000),headers:HEADERS});const h=await r.json();document.getElementById('proxy-status').innerHTML=`<span style="color:var(--green)">✅ Proxy (${h.totalBets} bets)</span>`;}catch{document.getElementById('proxy-status').innerHTML=`<span style="color:var(--red)">❌ Proxy hors ligne</span>`;}})();
+</script>
+</body>
+</html>
